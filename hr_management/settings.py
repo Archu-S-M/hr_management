@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'Admin_Management',
+    'Content_Management'
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -56,7 +57,8 @@ ROOT_URLCONF = 'hr_management.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, "Admin_Management","templates"),
+                 os.path.join(BASE_DIR, "Content_Management","templates"),],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

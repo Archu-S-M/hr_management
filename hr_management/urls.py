@@ -21,7 +21,8 @@ from django.conf import settings
 
 urlpatterns = [
     # url(r'^admin/', admin.site.urls),
-    url(r'', include('Admin_Management.urls'))
+    url(r'', include('Admin_Management.urls')),
+    url(r'^Contents/', include('Content_Management.urls'))
 ]
 
 
