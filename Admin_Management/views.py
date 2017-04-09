@@ -3,6 +3,7 @@ from django.views.generic import View
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
 
 
 from .models import CustomUser
@@ -61,10 +62,13 @@ class Login(View):
 
             if user:
                 if user.is_active:
+
                     login(request, user)
+                    messages.success(request, "Login Successfull")
                     return redirect('Dashboard')
 
-        return redirect('Login')
+        messages.error(request, "Invalid Username or Password")
+        return redirect('/?f=login')
 
 
 # To show the registers vistitor page
@@ -103,24 +107,29 @@ class Register(View):
             new_password = self.register["new_password"]
             rpt_password = self.register["rpt_password"]
 
-            user = CustomUser.objects.create_user(username=username,
-                                                  email=email,
-                                                  password=new_password,
-                                                  consultancy_name = consultancy,
-                                                  phone_no = phone_no,
-                                                  website = website,
-                                                  is_staff=False,
-                                                  )
+            if new_password == rpt_password:
+                try:
+                    custom_user = CustomUser.objects.create_user(username=username,
+                                                          email=email,
+                                                          password=new_password,
+                                                          consultancy_name = consultancy,
+                                                          phone_no = phone_no,
+                                                          website = website,
+                                                          is_staff=False,
+                                                          )
+
+                    custom_user.save()
+                    user = authenticate(username=username, password=new_password)
+
+                    login(request, user)
+
+                    user_properties = user_pages(user)
+                    self.context["pages"] = user_properties.getUserViews()["pages"]
+                    return render(request, self.template, self.context)
+                except:
+                    messages.warning(request, "The Admin name is Taken!!")
 
 
 
-            user.save()
 
-            login(request, user)
-
-            user_properties = user_pages(user)
-            self.context["pages"] = user_properties.getUserViews()["pages"]
-            return render(request, self.template, self.context)
-
-
-        return redirect("Login")
+        return redirect("/?f=register")

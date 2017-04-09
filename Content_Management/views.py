@@ -5,7 +5,8 @@ from django.core.urlresolvers import resolve
 from django.contrib.auth import authenticate, login, logout
 
 from Admin_Management.user_access import user_pages
-# Create your views here.
+
+#==================================================================
 
 
 # View for dashboard
@@ -35,7 +36,7 @@ class Dashboard(LoginRequiredMixin, View):
         else:
             return redirect("Login")
 
-
+# ===========================================================================
 # View for Mange Consultancy
 class ManageConsultancy(LoginRequiredMixin, View):
 
@@ -64,7 +65,7 @@ class ManageConsultancy(LoginRequiredMixin, View):
             return redirect("Login")
 
 
-
+# ===========================================================================
 # View for candidate profile
 class CandidateProfile(LoginRequiredMixin, View):
 
@@ -92,7 +93,7 @@ class CandidateProfile(LoginRequiredMixin, View):
         else:
             return redirect("Login")
 
-
+# ===========================================================================
 # View for questionnaire
 class Questionnaire(LoginRequiredMixin, View):
 
@@ -120,8 +121,8 @@ class Questionnaire(LoginRequiredMixin, View):
         else:
             return redirect("Login")
 
-
-# View for Manage Candidate
+# ===========================================================================
+# View for Candidates eligibility
 class Eligibility(LoginRequiredMixin, View):
 
     login_url = "/"

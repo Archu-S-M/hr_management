@@ -48,18 +48,30 @@ class user_pages():
         self.user = user
 
     def getUserViews(self):
+
+
         # If the user is Hr
         if self.user.is_superuser:
             self.user_views["access"] = ["All"]
+            self.user_views["permissions"] = [{"Dashboard": ["view","update"]},
+                                              {"ManageConsultancy": ["view","update","delete"]},
+                                              {"CandidateProfile": ["view"]},
+                                              {"Questionnaire": ["view","update","create","delete"]},
+                                              {"Eligibility": ["view", "update", "create","delete"]},
+                                              {"Settings": ["view", "update", "create","delete"]},
+                                            ]
             return self.user_views
 
-        # If the user is consultance
+        # If the user is consultant
         elif self.user.is_staff:
 
             page_1, _, page_2, *_ = self.user_views["pages"]
 
             self.user_views["pages"] = [page_1, page_2]
             self.user_views["access"] = [page_1["url"], page_2["url"]]
+            self.user_views["permissions"] = [{"Dashboard": ["view"]},
+                                              {"CandidateProfile": ["view","create","update","delete"]},
+                                             ]
 
             return self.user_views
 

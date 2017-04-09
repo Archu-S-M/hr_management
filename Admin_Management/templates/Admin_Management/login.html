@@ -48,10 +48,29 @@
                     <div class="panel-heading">
                         <div class="row">
                             <div class="col-xs-6">
-                                <a href="#" class="active" id="login-form-link">Login</a>
+                                <a href="#" class="
+                                {% if request.GET.f %}
+                                    {% if request.GET.f == 'login' %}
+                                        active
+                                    {% else %}
+                                        
+                                    {% endif %}
+                                  {% else %}
+                                    active
+                                  {% endif %}" id="login-form-link">Login</a>
                             </div>
                             <div class="col-xs-6">
-                                <a href="#" id="register-form-link">Register</a>
+                                <a href="#" class="
+                                  {% if request.GET.f %}
+                                    {% if request.GET.f == 'register' %}
+                                        active
+                                    {% else %}
+                                        
+                                    {% endif %}
+                                  {% else %}
+                                    
+                                  {% endif %}"
+                                id="register-form-link">Register</a>
                             </div>
                         </div>
                         <hr>
@@ -59,7 +78,18 @@
                     <div class="panel-body">
                         <div class="row">
                             <div class="col-lg-12">
-                                <form id="login-form" action="{% url 'Login' %}" method="post" role="form" style="display: block;">
+                            
+                                <form id="login-form" action="{% url 'Login' %}" method="post" role="form" style="display: 
+                                  {% if request.GET.f %}
+                                    {% if request.GET.f == 'login' %}
+                                        block
+                                    {% else %}
+                                        none
+                                    {% endif %}
+                                  {% else %}
+                                    block
+                                  {% endif %}
+                                ;">
                                     {% csrf_token %}
                                     {{ login_form.non_field_errors }}
                                     <div class="form-group">
@@ -70,6 +100,15 @@
                                         {{ login_form.password.errors }}
                                         {{ login_form.password }}
                                     </div>
+                                    
+                                    {% for message in messages %}
+                                        {% if message.tags == "error" %}
+                                        <div class="alert-danger" align="center">
+                                            {{ message }}
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                    
                                     <div class="form-group text-center">
                                         <input type="checkbox" tabindex="3" class="" name="remember" id="remember">
                                         <label for="remember"> Remember Me</label>
@@ -85,19 +124,37 @@
                                         <div class="row">
                                             <div class="col-lg-12">
                                                 <div class="text-center">
-                                                    <a href="http://phpoll.com/recover" tabindex="5" class="forgot-password" disabled>Forgot Password?</a>
+                                                    <a href="#" tabindex="5" class="forgot-password" disabled>Forgot Password?</a>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 </form>
-                                <form id="register-form" action="{% url 'Register' %}" method="post" role="form" style="display: none;">
+
+                                
+                                <form id="register-form" action="{% url 'Register' %}" method="post" role="form" style="display: 
+                                  {% if request.GET.f %}
+                                    {% if request.GET.f == 'register' %}
+                                        block
+                                    {% else %}
+                                        none
+                                    {% endif %}
+                                  {% else %}
+                                    none
+                                  {% endif %};">
                                     {% csrf_token %}
                                     {{ register_form.non_field_errors }}
                                     <div class="form-group">
                                         {{ register_form.admin_name.errors }}
                                         {{ register_form.admin_name }}
                                     </div>
+                                    {% for message in messages %}
+                                        {% if message.tags == "warning" %}
+                                        <div class="alert-danger" align="center">
+                                            {{ message }}
+                                        </div>
+                                        {% endif %}
+                                    {% endfor %}
                                     <div class="form-group">
                                         {{ register_form.email.errors }}
                                         {{ register_form.email }}
@@ -122,6 +179,9 @@
                                         {{ register_form.rpt_password.errors }}
                                         {{ register_form.rpt_password }}
                                     </div>
+                                    <div id="pass_mismatch" class="alert-danger" align="center">
+                                        
+                                    </div>
                                     <div class="form-group">
                                         <div class="row">
                                             <div class="col-sm-6 col-sm-offset-3">
@@ -130,6 +190,7 @@
                                         </div>
                                     </div>
                                 </form>
+                                
                             </div>
                         </div>
                     </div>
@@ -152,6 +213,20 @@
 
     <!-- Custom js files for login style -->
     <script src="{% static 'custom_js/login_style.js' %}"></script>
+
+    <script>
+        $("#register-form").on("submit",function(e){
+            var pass1 = $("#id_new_password").val();
+            var pass2 = $("#id_rpt_password").val();
+            alert(pass1);
+            if (pass1 === pass2)
+                return true;
+            else {
+                $("#pass_mismatch").html("Password Missmatch");
+                e.preventDefault();
+            }
+        });
+    </script>
 
 </body>
 
