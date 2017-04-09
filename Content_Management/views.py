@@ -136,7 +136,8 @@ class Eligibility(LoginRequiredMixin, View):
         user_properties = user_pages(request.user)
         user_property_values = user_properties.getUserViews()
 
-        self.context["pages"], self.context["access"] = user_property_values["pages"], user_property_values["access"]
+        self.context["pages"], self.context["access"] = (user_property_values["pages"],
+                                                         user_property_values["access"])
 
         current_url = resolve(request.path_info).url_name
 
