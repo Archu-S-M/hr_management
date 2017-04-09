@@ -1,4 +1,4 @@
-#!/var/www/html/hr_management/__env__hr_mgmt/bin/python3
+#!/var/www/html/hr_management/__env__hr_mgmt/bin/python3.5
 from django.core import management
 
 if __name__ == "__main__":
