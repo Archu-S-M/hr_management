@@ -137,6 +137,8 @@ MEDIA_URL = '/media/'
 
 
 
+
+
 # changing the stic files and dynamic paths
 if DEBUG:
     STATIC_ROOT = os.path.join(BASE_DIR,"static","static_only")

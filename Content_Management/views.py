@@ -3,8 +3,12 @@ from django.views.generic import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import resolve
 from django.contrib.auth import authenticate, login, logout
+from django.core.files.storage import FileSystemStorage
 
 from Admin_Management.user_access import user_pages
+
+from urllib import request as urlRequest
+
 
 #==================================================================
 
@@ -80,9 +84,12 @@ class CandidateProfile(LoginRequiredMixin, View):
         user_properties = user_pages(request.user)
         user_property_values = user_properties.getUserViews()
 
-        self.context["pages"], self.context["access"] = user_property_values["pages"], user_property_values["access"]
+        self.context["pages"], self.context["access"] = (user_property_values["pages"],
+                                                         user_property_values["access"])
 
         current_url = resolve(request.path_info).url_name
+
+
 
         if current_url in self.context["access"] or self.context["access"] == ["All"]:
             return render(request, self.template, self.context)
@@ -92,6 +99,24 @@ class CandidateProfile(LoginRequiredMixin, View):
 
         else:
             return redirect("Login")
+
+
+
+    # Uploading or updating candidate profiles
+    def post(self, request):
+
+        print(request.POST)
+        interview_video = request.FILES['interview_video']
+        video_name = interview_video.name
+        extension = video_name.split(".")[-1]
+        new_video_name = "new_video." + extension
+        print(interview_video.size)
+
+        fs = FileSystemStorage()
+        filename = fs.save(new_video_name, interview_video)
+
+
+        return redirect("CandidateProfile")
 
 # ===========================================================================
 # View for questionnaire
@@ -108,7 +133,8 @@ class Questionnaire(LoginRequiredMixin, View):
         user_properties = user_pages(request.user)
         user_property_values = user_properties.getUserViews()
 
-        self.context["pages"], self.context["access"] = user_property_values["pages"], user_property_values["access"]
+        self.context["pages"], self.context["access"] = (user_property_values["pages"],
+                                                         user_property_values["access"])
 
         current_url = resolve(request.path_info).url_name
 
