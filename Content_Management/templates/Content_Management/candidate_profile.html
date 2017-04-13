@@ -26,7 +26,7 @@
         </div>
         <!-- /.col-lg-8 -->
         <div class="col-lg-2">
-            <button id="add_candidates" class="btn btn-primary">Add Candidates</button>
+            <button id="new_candidate" class="btn btn-primary">New Candidate</button>
         </div>
         <!-- /.col-lg-4 -->
     </div>
@@ -48,7 +48,16 @@
                         <input id="age" class="form-control" type="text" name="age" placeholder="Age" required>
                     </div>
                     <div class="form-group">
-                        <input id="experiance" class="form-control" type="text" name="experiance" placeholder="Experiance" required>
+                        <input id="experience" class="form-control" type="text" name="experience" placeholder="Experience" required>
+                    </div>
+                    <div class="form-group">
+                        <select class="selectpicker form-control" id="notice_period" name="notice_period">
+                            <option value="IMMEDIATE">Immediate</option>
+                            <option value="2WEEK">2 Weeks</option>
+                            <option value="1MONTH">1 Month</option>
+                            <option value="2MONTHS">2 Months</option>
+                            <option value="MORE">More</option>
+                        </select>
                     </div>
 	            	<div class="form-group">
 	            		<input id="email" class="form-control" type="email" name="email" placeholder="Candidate Email" required>
@@ -84,7 +93,7 @@
                 <div class="col-lg-6">
                     
                     <div class="form-group">
-                        <input id="iterview_time" class="form-control" type="text" name="iterview_time" placeholder="Inteview Time (yyyy-mm-dd hh:mm:ss)">
+                        <input id="interview_time" class="form-control" type="text" name="interview_time" placeholder="Inteview Time (yyyy-mm-dd hh:mm:ss)">
                     </div>
                     
                     <div class="row">
@@ -117,7 +126,7 @@
                             <source src='/media/new_video.mp4' type="video/mp4">
                             <p class="alert-warning">
                             Your browser doesnot support videos! 
-                            Use browsers which supports html5 rendering
+                            Use browsers which supports html5 video rendering
                             </p>
                         </video>
                     </div>
@@ -131,19 +140,19 @@
                 <div class="row">
                     <div class="col-lg-4">
                         <div class="form-group">
-                            <input id="add" class="form-control btn btn-primary" type="submit" name="add" value="Create/Update">
+                            <input id="add" class="form-control btn btn-primary" type="submit" name="submit" value="Create/Update">
                         </div>
                     </div>
                     <!--/.col-lg-4-->
                     <div class="col-lg-4">
                         <div class="form-group">
-                            <input id="candidate_status" class="form-control btn btn-warning" type="submit" name="candidate_status" value="Acivate/Deactivate">
+                            <input id="candidate_status" class="form-control btn btn-warning" type="submit" name="submit" value="Acivate/Deactivate">
                         </div>
                     </div>
                     <!--/.col-lg-4-->
                     <div class="col-lg-4">
                         <div class="form-group">
-                            <input id="delete" class="form-control btn btn-danger" type="submit" name="delete" value="Delete">
+                            <input id="delete" class="form-control btn btn-danger" type="submit" name="submit" value="Delete">
                         </div>
                     </div>
                     <!--/.col-lg-4-->

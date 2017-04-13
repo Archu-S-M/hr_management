@@ -27,7 +27,8 @@ class Dashboard(LoginRequiredMixin, View):
         user_properties = user_pages(request.user)
         user_property_values = user_properties.getUserViews()
 
-        self.context["pages"], self.context["access"] = user_property_values["pages"], user_property_values["access"]
+        self.context["pages"], self.context["access"] = (user_property_values["pages"],
+                                                         user_property_values["access"])
 
         current_url = resolve(request.path_info).url_name
 
@@ -55,7 +56,8 @@ class ManageConsultancy(LoginRequiredMixin, View):
         user_properties = user_pages(request.user)
         user_property_values = user_properties.getUserViews()
 
-        self.context["pages"], self.context["access"] = user_property_values["pages"], user_property_values["access"]
+        self.context["pages"], self.context["access"] = (user_property_values["pages"],
+                                                         user_property_values["access"])
 
         current_url = resolve(request.path_info).url_name
 
@@ -106,14 +108,40 @@ class CandidateProfile(LoginRequiredMixin, View):
     def post(self, request):
 
         print(request.POST)
+        # get the data from the request
+        data = request.POST
+
+        post_method = data["submit"]
+        # if post_method == "Create/Update":
+
+        name = data["name"]
+        age  = data["age"]
+        experience = data["experience"]
+        email = data["email"]
+        no = data["contact_no"]
+        skill_set = data["skills"]
+        interview_time = data["interview_time"]
+
+        # get the uploaded files
+        candidate_resume = request.FILES['resume']
         interview_video = request.FILES['interview_video']
+
+        # change the file names before move into the media directory
+        # The directory will contains the file names with email id as the postscript
         video_name = interview_video.name
         extension = video_name.split(".")[-1]
-        new_video_name = "new_video." + extension
+        new_video_name = "Video-%s.%s" % (email, extension)
         print(interview_video.size)
 
+        resume_name = candidate_resume.name
+        extension = resume_name.split(".")[-1]
+        new_resume_name = "Resume-%s.%s" % (email, extension)
+        print(candidate_resume.size)
+
+        # move the files to the media directory
         fs = FileSystemStorage()
-        filename = fs.save(new_video_name, interview_video)
+        video  = fs.save(new_video_name, interview_video)
+        resume = fs.save(new_resume_name, candidate_resume)
 
 
         return redirect("CandidateProfile")
