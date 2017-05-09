@@ -25,6 +25,14 @@
     <!-- Custom Fonts -->
     <link href="{% static 'vendor/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet" type="text/css">
 
+
+    <link rel="stylesheet" type="text/css" href='{% static "custom_css/overwrite_navbar.css" %}'>
+
+
+    <!-- M custom scrollbar -->
+    <link rel="stylesheet" href='{% static "mCustomScrollbar/jquery.mCustomScrollbar.css" %}' />
+    <link rel="stylesheet" href='{% static "custom_css/theme_style.css" %}' />
+
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -36,9 +44,9 @@
 
 </head>
 
-<body>
+<body style="height:100vh; overflow-y: hidden;">
 
-    <div id="wrapper">
+    <div id="wrapper"> 
 
         {% include "Content_Management/navbar.html" %}
  
@@ -59,6 +67,8 @@
     <!-- jQuery -->
     <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
 
+    
+
     <!-- Bootstrap Core JavaScript -->
     <script src="{% static 'vendor/bootstrap/js/bootstrap.min.js' %}"></script>
 
@@ -67,6 +77,19 @@
 
     <!-- Custom Theme JavaScript -->
     <script src="{% static 'dist/js/sb-admin-2.js' %}"></script>
+
+    <!-- MCustom Scrollbar -->
+    <script src={% static "mCustomScrollbar/jquery.mCustomScrollbar.concat.min.js" %}></script>
+
+    <script type="text/javascript">
+        $("body").mCustomScrollbar({
+            theme: "dark",
+            autoHideScrollbar: true,
+            autoExpandScrollbar: true,
+        });
+        $(".mCustomScrollBox").removeClass("mCSB_inside");
+        $(".mCustomScrollBox").addClass("mCSB_outside");
+    </script>
 
     {% block "custom_scripts" %}
     {% endblock %}

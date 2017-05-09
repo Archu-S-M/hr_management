@@ -21,6 +21,8 @@ from Admin_Management.user_access import user_pages
 from Admin_Management.models import CustomUser
 from Content_Management.models import Candidate
 from Content_Management.models import Skillset
+from Content_Management.models import Activities
+from Content_Management.models import Requirements
 
 # for test
 from urllib import request as urlRequest
@@ -57,6 +59,45 @@ class Dashboard(LoginRequiredMixin, View):
         else:
             return redirect("Login")
 
+
+    def post(self, request):
+
+        # initialize the response object
+        response = {
+        }
+
+        print(request.POST)
+
+        method = request.POST["submit"]
+
+        if method == "get_activities":
+
+            response = {
+                "status": "success",
+                "data": []
+            }
+
+            if request.user.is_superuser:
+                activities = Activities.objects.all().order_by("-created_at")
+
+            else:
+                activities = Activities.objects.filter(consultancy=request.user).order_by("-created_at")
+
+            for activity in activities:
+                created_at = activity.created_at.strftime("%d/%m/%Y %I:%M %p")
+                response['data'].append(
+                    {"activities": {
+                        "activity": activity.activity,
+                        "consultancy_id": activity.consultancy_id,
+                        "candidate_id": activity.candidate_id
+                    },
+                        "date": created_at}
+                )
+
+        return HttpResponse(json.dumps(response), content_type="application/json")
+
+
+
 # ===========================================================================
 # View for Mange Consultancy
 class ManageConsultancy(LoginRequiredMixin, View):
@@ -86,6 +127,86 @@ class ManageConsultancy(LoginRequiredMixin, View):
         else:
             return redirect("Login")
 
+    # ===================================================================
+
+    def post(self, request):
+
+
+        # initialize the response object
+        response = {
+        }
+
+        print(request.POST)
+
+        method = request.POST["submit"]
+
+        if method == "get_consultancy":
+            response = {
+                "status": "success",
+                "data": []
+            }
+
+
+            # to get the data from the consultancy
+            consultancy = CustomUser.objects.filter(~Q(id=request.user.id)).order_by(
+                    "is_staff", "-date_joined").distinct()
+
+            # print(consultancy.query)
+            for users in consultancy:
+                consultancy_name = users.consultancy_name
+                website = users.website
+                phone_no = users.phone_no
+                registered_time = users.date_joined.strftime("%d/%m/%Y %I:%M:%S %p")
+                status = users.is_staff
+
+                response['data'].append({
+                    "consultancy": {"name":consultancy_name,"id":users.id},
+                    "website": website,
+                    "phone_no": phone_no,
+                    "datetime": registered_time,
+                    "status": status
+                })
+
+
+            return HttpResponse(json.dumps(response),
+                                content_type="application/json")
+
+        # Update the consultancy from newbie to valid consultancy
+        elif method == "update_consultancy":
+
+            response = {
+                "status": "no data",
+                "data": []
+            }
+
+            data = request.POST
+
+            if data:
+
+                consultancy_id = data["filter[id]"]
+                try:
+                    consultancy = CustomUser.objects.get(pk=int(consultancy_id))
+                    activity = ""
+                    if consultancy.is_staff:
+                        consultancy.is_staff = False
+                        activity = "Consultancy Blocked"
+                    else:
+                        consultancy.is_staff = True
+                        activity = "Consultancy Approved"
+                    consultancy.save()
+
+                    activities = Activities(consultancy=consultancy,
+                                            activity=activity,
+                                            )
+
+                    activities.save()
+                    response["status"] = "success"
+                except:
+                    response["status"] = "Invalid consultancy"
+
+            return HttpResponse(json.dumps(response), content_type="application/json")
+
+
 
 # ===========================================================================
 # View for candidate profile
@@ -113,7 +234,7 @@ class CandidateProfile(LoginRequiredMixin, View):
         :return: rendered page
         '''
 
-        self.context["candidate_data"] = {"name":"name"}
+        self.context["candidate_data"] = {"name": "name"}
         user_properties = user_pages(request.user)
         user_property_values = user_properties.getUserViews()
         self.context["pages"], self.context["access"] = (user_property_values["pages"],
@@ -155,12 +276,8 @@ class CandidateProfile(LoginRequiredMixin, View):
         # condition to check whether is the new candidate or updating the existing one!
         # ==================================================
         if post_method == "Create/Update":
-
-            # call the function in the same class to validate the form data
             response = self.validate_create_or_update(request, data)
-
-            return HttpResponse(json.dumps(response),
-                                content_type="application/json")
+            return HttpResponse(json.dumps(response), content_type="application/json")
 
         elif post_method == "Activate/Deactivate":
 
@@ -197,7 +314,7 @@ class CandidateProfile(LoginRequiredMixin, View):
         response = {
             "errors": [],
             "info": [],
-            "message": [],
+            "message": {},
             "video_url": new_video_name,
             "resume_url": new_resume_name,
         }
@@ -256,12 +373,13 @@ class CandidateProfile(LoginRequiredMixin, View):
                     # ---------------------------
                     if extension not in self.video_extensions:
                         response["errors"].append({"interview_video":
-                                                       "Format not supported (Current = %s Expected = .mp4)"
+                                                       "Format not supported "
+                                                       "(Current = %s Expected = .mp4)"
                                                        % extension})
                     else:
                         new_video_name = "Video-%s.%s" % (email, extension)
 
-                    print(interview_video.size)
+                    # print(interview_video.size)
                     # check the video in a valid size (50 MB)
                     # ------------------------------------------
                     if interview_video.size > 52428800:
@@ -320,39 +438,52 @@ class CandidateProfile(LoginRequiredMixin, View):
             user_id = request.user.id
             consultancy = CustomUser.objects.get(pk=user_id)
             # if the save type is true the user is a new user
-            print(save_type)
+            # print(save_type)
             if not save_type:
-                candidate = Candidate.objects.get(candidate_email=email)
-                candidate.candidate_name = name
-                candidate.candidate_email = email
-                candidate.candidate_age = age
-                candidate.candidate_contact_no = no
-                candidate.candidate_experience = experience
-                candidate.candidate_interview_time = interview_time
-                candidate.current_ctc = current_ctc
-                candidate.expected_ctc = expected_ctc
-                candidate.preferred_location = preferred_location
-                candidate.notice_period = notice_period
-                if new_video_name != "#":
-                    candidate.candidate_interview = new_video_name
-                else:
-                    new_video_name = candidate.candidate_interview
-                if new_resume_name != "#":
-                    candidate.candidate_resume = new_resume_name
-                else:
-                    new_resume_name = candidate.candidate_resume
-
-                candidate.save()
-                candidate_id = candidate.id
                 try:
-                    Skillset.objects.filter(candidate_id=candidate_id).delete()
-                    for skills in skill_set:
-                        skill_set_instance = Skillset(candidate=candidate,
-                                                      candidate_skill=skills)
-                        skill_set_instance.save()
-                except:
-                    pass
+                    candidate = Candidate.objects.get(consultancy=consultancy,
+                                                      candidate_email=email)
 
+                    candidate.candidate_name = name
+                    candidate.candidate_email = email
+                    candidate.candidate_age = age
+                    candidate.candidate_contact_no = no
+                    candidate.candidate_experience = experience
+                    candidate.candidate_interview_time = interview_time
+                    candidate.current_ctc = current_ctc
+                    candidate.expected_ctc = expected_ctc
+                    candidate.preferred_location = preferred_location
+                    candidate.notice_period = notice_period
+                    if new_video_name != "#":
+                        candidate.candidate_interview = new_video_name
+                    else:
+                        new_video_name = candidate.candidate_interview
+                    if new_resume_name != "#":
+                        candidate.candidate_resume = new_resume_name
+                    else:
+                        new_resume_name = candidate.candidate_resume
+
+                    candidate.save()
+                    candidate_id = candidate.id
+                    try:
+                        Skillset.objects.filter(candidate_id=candidate_id).delete()
+                        for skills in skill_set:
+                            skill_set_instance = Skillset(candidate=candidate,
+                                                          candidate_skill=skills)
+                            skill_set_instance.save()
+                    except:
+                        pass
+
+                    activities = Activities(consultancy=consultancy,
+                                            candidate_id=candidate_id,
+                                            activity="Candidate Details Updated",
+                                            )
+
+                    activities.save()
+
+                except:
+                    response["message"]["error"] = ("You are not authorized to update the candidate <br>"
+                                                    "Belongs to some other User")
 
 
 
@@ -372,6 +503,8 @@ class CandidateProfile(LoginRequiredMixin, View):
                                       consultancy=consultancy)
                 candidate.save()
 
+
+
                 # adding skill sets in the table
                 for skills in skill_set:
                     # print(skills)
@@ -380,18 +513,27 @@ class CandidateProfile(LoginRequiredMixin, View):
                     skill_set_instance.save()
 
 
+
+                activities = Activities(consultancy=consultancy,
+                                        candidate_id=candidate.id,
+                                        activity="New Candidate Created",
+                                        )
+
+                activities.save()
+
+
         # ================================================================================
         # render and give the new values to the posted page
 
         # ================================================================================
         if not response["errors"] and not response["info"]:
-            response = {
-                "errors": [],
-                "info": [],
-                "message": ["Successfully Added information"],
-                "video_url": '/media/%s' % new_video_name,
-                "resume_url": '/media/%s' % new_resume_name,
-            }
+            response["errors"] = []
+            response["info"] = []
+            response["video_url"] = '/media/%s' % new_video_name
+            response["resume_url"] = '/media/%s' % new_resume_name
+            if not response["message"]:
+                response["message"] = {"success": "Successfully Added Information"}
+
 
         # return the response object with status
         return response
@@ -431,9 +573,10 @@ class CandidateProfile(LoginRequiredMixin, View):
         # ------------------------------------------
         candidate_id = int(data["id"])
 
-        consultancy = CustomUser.objects.get(pk=request.user.id)
-        candidate = Candidate.objects.get(consultancy=consultancy, pk=candidate_id)
-        skills = Skillset.objects.filter(candidate_id=candidate_id)
+
+        # consultancy = CustomUser.objects.get(pk=request.user.id)
+        candidate = Candidate.objects.get(pk=candidate_id)
+        skills = Skillset.objects.filter(candidate=candidate)
 
         skill_arr = skills.values_list("candidate_skill", flat=True)
 
@@ -493,29 +636,36 @@ class CandidateProfile(LoginRequiredMixin, View):
 
         experience = data["experience"]
         location = data["location"]
-
+        consultancy_id = data["consultancy"]
+        # print(consultancy_id)
         if experience:
             filter_queries["candidate__candidate_experience"] = experience
         if location:
             filter_queries["candidate__preferred_location"] = location
+        if consultancy_id:
+            filter_queries["candidate__consultancy__id"] = consultancy_id
 
 
 
-
-        candidate = Skillset.objects.filter(
-            candidate__consultancy=request.user).filter(
-            skill_query).filter(
-            **filter_queries).select_related()
+        if not request.user.is_superuser:
+            candidate = Skillset.objects.filter(
+                candidate__consultancy=request.user).filter(
+                skill_query).filter(
+                **filter_queries).select_related()
+        else:
+            candidate = Skillset.objects.filter(
+                skill_query).filter(
+                **filter_queries).select_related()
 
 
 
         # ================================================
-        # only for referrence
+        # only for reference
         # {"candidate": {"name": "candidate_name",
         #                "id": "candidate_pk"},
         #  "experience": "Experience in Years",
-        #  "skills": "Comma seporated experiences",
-        #  "expected_ctc": "Expeceted ctc in Lacks",
+        #  "skills": "Comma separated experiences",
+        #  "expected_ctc": "Expected ctc in Lacks",
         #  "notice": "Type of notice period"}
         # ================================================
 
@@ -526,6 +676,8 @@ class CandidateProfile(LoginRequiredMixin, View):
 
         # rearranging the data for better mapping
         for can in candidate_details:
+            consultancy_name = can.candidate.consultancy.consultancy_name
+            consultancy_name = consultancy_name if consultancy_name else "Mine"
             name = can.candidate.candidate_name
             skill = can.candidate_skill
             experience = can.candidate.candidate_experience
@@ -538,7 +690,7 @@ class CandidateProfile(LoginRequiredMixin, View):
                                             "skills":"",
                                             "experience":""
                                             }
-
+            candidate_temp_array[id]["consultancy"] = consultancy_name
             candidate_temp_array[id]["name"] = name
             candidate_temp_array[id]["skills"] += (skill if not candidate_temp_array[id]["skills"]
                                                    else ",%s" % skill)
@@ -557,7 +709,8 @@ class CandidateProfile(LoginRequiredMixin, View):
                     "experience": candidate_temp_array[id]["experience"],
                     "skills": candidate_temp_array[id]["skills"],
                     "expected_ctc": candidate_temp_array[id]["expected_ctc"],
-                    "notice": candidate_temp_array[id]["notice"]
+                    "notice": candidate_temp_array[id]["notice"],
+                    "consultancy": candidate_temp_array[id]["consultancy"]
                     }
 
             response["candidate_details"].append(temp)
@@ -591,6 +744,7 @@ class CandidateProfile(LoginRequiredMixin, View):
         # initialize the response
         # -----------------------
         response = {
+            "consultancy": [],
             "skills": [],
             "locations": [],
             "experience": []
@@ -605,9 +759,39 @@ class CandidateProfile(LoginRequiredMixin, View):
             filter_name = data["filter"]
 
             # ----------------------------------------------------------
+            # to get the filters for the consultancy
+
+            if filter_name == "consultancy":
+                '''yet to code'''
+                if request.user.is_superuser:
+                    consultancy = CustomUser.objects.all()
+                    # print(consultancy)
+                    for con_objects in consultancy:
+                        consultancy_name = con_objects.consultancy_name
+                        consultancy_pk = con_objects.pk
+                        if consultancy_name in ["null", None, "None"]:
+                            consultancy_name = "All"
+                            consultancy_pk = ""
+
+                        response[filter_name].append({"label": consultancy_name,
+                                                      "value": consultancy_pk})
+                    # print(response)
+                else:
+                    consultancy = CustomUser.objects.get(user=request.user)
+                    consultancy_name = consultancy.consultancy_name
+                    consultancy_pk = consultancy.pk
+
+                    response[filter_name].append({"label": consultancy_name,
+                                                  "value": consultancy_pk})
+
+            # ----------------------------------------------------------
             # to get the filters for the candidate preferred location
             if filter_name == "skills":
-                skills = Skillset.objects.filter(candidate__consultancy=request.user)
+                if request.user.is_superuser:
+                    skills = Skillset.objects.all()
+                else:
+                    skills = Skillset.objects.filter(
+                        candidate__consultancy=request.user)
 
                 skills = skills.values_list(
                     "candidate_skill", flat=True).order_by(
@@ -620,21 +804,28 @@ class CandidateProfile(LoginRequiredMixin, View):
             # to get the filters for the candidate preferred location
             if filter_name == "locations":
 
-
-                locations = Candidate.objects.filter(consultancy=request.user)
+                if request.user.is_superuser:
+                    locations = Candidate.objects.all()
+                else:
+                    locations = Candidate.objects.filter(
+                        consultancy=request.user)
                 locations = locations.values_list(
                     "preferred_location", flat=True).order_by(
                     "preferred_location").distinct()
 
                 for location in locations:
                     # print(location)
-                    response[filter_name].append({"label": location, "value": location})
+                    response[filter_name].append({"label": location,
+                                                  "value": location})
 
             # ---------------------------------------------------------
             # to get the filters for the candidate preferred experience
             if filter_name == "experience":
 
-                experiences = Candidate.objects.filter(consultancy=request.user)
+                if request.user.is_superuser:
+                    experiences = Candidate.objects.all()
+                else:
+                    experiences = Candidate.objects.filter(consultancy=request.user)
                 experiences = experiences.values_list(
                     "candidate_experience", flat=True).order_by(
                     "candidate_experience").distinct()
@@ -722,3 +913,79 @@ class Eligibility(LoginRequiredMixin, View):
 
         else:
             return redirect("Login")
+
+    # ================================================================================
+    def post(self, request):
+
+        # to get the new requirements
+
+
+
+        method = request.POST["submit"]
+
+
+        if method == "get_eligibility":
+            # print(method)
+
+            # response object to return
+            response = {
+                "eligibility" : [],
+                "status": "Failure"
+            }
+
+            requirements = Requirements.objects.all().order_by("created_at")
+
+            for req in requirements:
+                name = req.requirement_name
+                id = req.id
+
+                response["eligibility"].append({
+                    "eligibility": name,
+                    "id": id
+                })
+
+
+            print(response)
+
+            return HttpResponse(json.dumps(response), content_type="application/json")
+
+        elif method == "post_eligibility":
+
+            new_eligibility = request.POST["eligibility"]
+
+            response = {
+                "id": None,
+            }
+
+            if new_eligibility:
+
+                requirements = Requirements(requirement_name=new_eligibility)
+
+                requirements.save()
+
+                id = requirements.id
+                response["id"] = id
+
+
+                # print(response)
+                return HttpResponse(json.dumps(response), content_type="application/json")
+
+
+        elif method == "dlt_eligibility":
+
+
+            # print("deleted eligiblity")
+
+            id = request.POST["id"]
+            response = {
+                "status": "Failure"
+            }
+
+            try:
+                requirements = Requirements.objects.get(pk=int(id)).delete()
+                response["status"] = "Success"
+            except:
+                pass
+
+            # print(response)
+            return HttpResponse(json.dumps(response), content_type="application/json")

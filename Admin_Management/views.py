@@ -9,6 +9,7 @@ from django.contrib import messages
 from .models import CustomUser
 from .forms import LoginForm, RegisterForm
 from .user_access import user_pages
+from Content_Management.models import Activities
 
 
 # To show the initial page
@@ -120,6 +121,13 @@ class Register(View):
 
                     custom_user.save()
                     user = authenticate(username=username, password=new_password)
+
+                    # Creating activities
+                    activities = Activities(consultancy=custom_user,
+                                            activity="New Consultancy Registered Waiting for Approval",
+                                            )
+
+                    activities.save()
 
                     login(request, user)
 

@@ -4,7 +4,6 @@ from django.utils import timezone
 from Admin_Management.models import CustomUser
 # Create your models here.
 
-
 # Candidate profile model
 class Candidate(models.Model):
     consultancy = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
@@ -36,7 +35,7 @@ class Skillset(models.Model):
 # hr requirements model
 class Requirements(models.Model):
     requirement_name = models.CharField(max_length=300, null=False)
-    requirement_status = models.BooleanField(default=1)
+    requirement_status = models.BooleanField(default=True)
     created_at = models.DateTimeField(null=False, default=timezone.now)
     updated_at = models.DateTimeField(null=False, default=timezone.now)
 
@@ -48,3 +47,10 @@ class Questions(models.Model):
     question_status = models.BooleanField(default=1)
     created_at = models.DateTimeField(null=False, default=timezone.now)
     updated_at = models.DateTimeField(null=False, default=timezone.now)
+
+
+class Activities(models.Model):
+    consultancy = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    candidate_id = models.IntegerField(null=False, default=0)
+    activity = models.CharField(max_length=500, null=False)
+    created_at = models.DateTimeField(null=False, default=timezone.now)

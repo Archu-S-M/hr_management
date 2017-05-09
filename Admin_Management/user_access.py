@@ -65,12 +65,16 @@ class user_pages():
         # If the user is consultant
         elif self.user.is_staff:
 
-            page_1, _, page_2, *_ = self.user_views["pages"]
+            page_1, _, page_2, page_3, *_ = self.user_views["pages"]
 
-            self.user_views["pages"] = [page_1, page_2]
-            self.user_views["access"] = [page_1["url"], page_2["url"]]
+            self.user_views["pages"] = [page_1, page_2, page_3]
+            self.user_views["access"] = [page_1["url"], page_2["url"],
+                                         page_3["url"], page_3["child"][0]["url"],
+                                         page_3["child"][1]["url"]]
             self.user_views["permissions"] = [{"Dashboard": ["view"]},
                                               {"CandidateProfile": ["view","create","update","delete"]},
+                                              {"Questionnaire": ["view"]},
+                                              {"Eligibility": ["view"]},
                                              ]
 
             return self.user_views
